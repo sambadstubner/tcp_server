@@ -1,51 +1,113 @@
 import logging
-import random
 import socket
+import struct
+
+import actions
+from server_parser import ServerParser
 
 
-def randomize_text(text):
-    def discard():
-        return random.choices([True, False], weights=[1, 5])[0]
 
-    def repeat(char):
-        should_repeat = random.choices([True, False], weights=[1, 5])[0]
+class Server:
+    def __init__(self, port):
+        self.port = port
 
-        if should_repeat:
-            repeat_amount = int(random.paretovariate(1))
-            return char * repeat_amount
-        else:
-            return char
-
-    text = text.decode()
-    transformed_text = [repeat(c) for c in text if not discard()]
-
-    if len(transformed_text) == 0:
-        transformed_text = text[0]
-
-    return "".join(transformed_text).encode()
-
-
-def run(port):
-    server_socket = socket.socket()
-    server_socket.bind(("", port))
-    server_socket.listen()
-
-    while True:
-        conn, address = server_socket.accept()
-        logging.info(f"Connection from: {address}")
+    def run(self):
+        server_socket = socket.create_server(address=("", self.port),
+                                            family=socket.AF_INET,
+                                            reuse_port=True)
+        server_socket.listen()
 
         while True:
-            data = conn.recv(1024).decode()
-            logging.info(f"Received: {data}")
+            conn, address = server_socket.accept()
+            logging.info(f"Connection from: {address}")
 
-            if not data:
-                logging.info("Client disconnected...")
-                break
+            while True:
+                header = conn.recv(4)
+                if not header:
+                    logging.info("Client disconnected...")
+                    break
 
-            conn.send(data.upper().encode())
+                action, message_length = self.parse_header(header)
+                logging.debug(f"Action: {action:02x} Message length: {message_length:02x}")
 
-        conn.close()
+                message = conn.recv(message_length).decode()
+                logging.info(f"Recieved: {message}")
+                
+                response = Server.create_response(action, message)
+                logging.debug(f"Response packet: {response}")
+                
+                conn.send(response)
+
+            conn.close()
+
+
+    @staticmethod
+    def parse_header(header) -> (int, int):
+        print(f"Raw header: {header}")
+        header = struct.unpack('!L', header)[0]
+        logging.debug(f"Header: {header}")
+        return Server.decode_action_from_header(header), Server.decode_message_length_from_header(header)
+    
+    @staticmethod
+    def decode_action_from_header(header) -> int:
+        return header >> 27
+    
+    @staticmethod
+    def decode_message_length_from_header(header) -> int:
+        return header & 0x7FFFFFF
+    
+
+    def create_response(action:int, message:str):
+        message = Server.create_response_message(action, message)
+        if message == None:
+            logging.info("Invalid action detected")
+            return None
+        logging.info(f"Response message: {message}")
+
+        message_length = Server.create_response_message_length(message)
+
+        response_message = message_length + message.encode()
+        return response_message
+
+    @staticmethod
+    def create_response_message(action, message) -> str:
+        if(action == actions.UPPERCASE):
+            logging.debug("Action: UPPERCASE")
+            return actions.uppercase(message)
+        
+        if(action == actions.LOWERCASE):
+            logging.debug("Action: LOWERCASE")
+            return actions.lowercase(message)
+        
+        if(action == actions.REVERSE):
+            logging.debug("Action: REVERSE")
+            return actions.reverse(message)
+
+        if(action == actions.SHUFFLE):
+            logging.debug("Action: SHUFFLE")
+            return actions.shuffle(message)
+        
+        if(action == actions.RANDOM):
+            logging.debug("Action: RANDOM")
+            return actions.random(message)
+        
+        else:
+            return None
+        
+    @staticmethod
+    def create_response_message_length(message):
+        message_length = len(message)
+        logging.debug(f"Response message length before packing: {message_length}")
+        message_length = struct.pack('!L', message_length)
+        logging.debug(f"Response message length after packing: {message_length}")
+        return message_length
 
 
 if __name__ == "__main__":
-    run(8083)
+    args = ServerParser().parse_args()
+    if args.v:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.ERROR)
+    server = Server(args.port)
+    server.run()
