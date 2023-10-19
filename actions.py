@@ -18,9 +18,10 @@ def reverse(message:str) -> str:
     return message[::-1]
 
 
-# FIXME: Implement shuffle
 def shuffle(message:str) -> str:
-    return message
+    message_list = list(message)
+    rand.shuffle(message_list)
+    return ''.join(message_list)
 
 
 def random(message:str) -> str:

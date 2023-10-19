@@ -8,7 +8,6 @@ class ServerParser(argparse.ArgumentParser):
         self.add_argument('-v', '-verbose', action='store_true', help="turn on debugging output", required=False)
 
 
-
 if __name__ == '__main__':
     args = ServerParser().parse_args()
     print(args.port)
