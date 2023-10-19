@@ -11,7 +11,16 @@ class TestActions:
         assert actions.reverse("Hello world") == "dlrow olleH"
 
     def test_shuffle(self):
-        pass
+        words = "Hello world"
+        result = actions.shuffle(words)
+        for letter in words:
+            assert letter in result
+
+        for letter in result:
+            assert letter in words
+        
+        assert result != words
+        
 
     def test_random(self):
         result = actions.random("Hello world") != "Hello world"

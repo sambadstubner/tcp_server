@@ -9,6 +9,8 @@ from server_parser import ServerParser
 
 
 class Server:
+    EXPECTED_HEADER_SIZE = 4
+
     def __init__(self, port:int):
         self.port = port
         signal.signal(signal.SIGINT, self.handle_exit)
@@ -24,7 +26,7 @@ class Server:
             logging.info(f"Connection from: {address}")
 
             while True:
-                header = conn.recv(4)
+                header = conn.recv(self.EXPECTED_HEADER_SIZE)
                 if not header:
                     logging.info("Client disconnected...")
                     break
@@ -109,7 +111,7 @@ class Server:
 
 
     def handle_exit(self, sig, frame):
-        logging.debug("Interrupt detected, shutting down server...")
+        logging.info("Interrupt detected, shutting down server...")
         self.server_socket.close()
         sys.exit(0)
 
