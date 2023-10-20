@@ -127,10 +127,6 @@ class Server:
         sys.exit(0)
 
 if __name__ == "__main__":
-    args = ServerParser().parse_args()
-    if args.v:
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.ERROR)
-    server = Server(args.port)
+    parser = ServerParser()
+    server = Server(parser.args.port)
     server.run()
