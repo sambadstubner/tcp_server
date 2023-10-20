@@ -36,18 +36,7 @@ class Server:
                 action, message_length = self.parse_header(header)
                 logging.debug(f"Action: {action:02x} Message length: {message_length:02x}")
                 
-                num_received = 0
-                message = str()
-                while(num_received < message_length):
-                    num_remaining = message_length - num_received
-                    if(num_remaining < self.DEFAULT_BUFFER_SIZE):
-                        buffer_size = num_remaining
-                    else:
-                        buffer_size = self.DEFAULT_BUFFER_SIZE
-                    received_bytes = conn.recv(buffer_size).decode()
-                    num_received += len(received_bytes)
-                    message += received_bytes
-
+                message = self.receive_message(conn, message_length)
                 logging.info(f"Received: {message}")
                 
                 response = Server.create_response(action, message)
@@ -58,6 +47,22 @@ class Server:
 
 
             conn.close()
+
+    @staticmethod
+    def receive_message(connected_socket, message_length):
+        num_received = 0
+        message = str()
+        while(num_received < message_length):
+            num_remaining = message_length - num_received
+            if(num_remaining < Server.DEFAULT_BUFFER_SIZE):
+                buffer_size = num_remaining
+            else:
+                buffer_size = Server.DEFAULT_BUFFER_SIZE
+            received_bytes = connected_socket.recv(buffer_size).decode()
+            num_received += len(received_bytes)
+            message += received_bytes
+        
+        return message
 
 
     @staticmethod
