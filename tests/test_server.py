@@ -70,9 +70,6 @@ class TestServer:
         assert received == b"\x00\x00\x00\x13emiT erofeB naL ehT"
     
 
-    def test_close_server(self):
-        self.server.server_socket.close()
-
 if __name__ == "__main__":
     test = TestServer()
     test.test_the_lan_before_time_reverse()
