@@ -57,7 +57,7 @@ class TestServer:
         logging.info("Action: RANDOM Message: Hello World!")
         self.client.send(input)
         received = self.client.recv(1024)
-        logging.info(f"Received: {received}")
+        logging.debug(f"Received: {received}")
         assert received != input
         assert len(received) != None
 
@@ -68,6 +68,14 @@ class TestServer:
         received = self.client.recv(1024)
         logging.info(f"Received: {received}")
         assert received == b"\x00\x00\x00\x13emiT erofeB naL ehT"
+
+
+    def test_error(self):
+        self.client.send(b"\x28\x00\x00\x13The Lan Before Time")
+        logging.info("Action: ERROR Message: The Lan Before Time")
+        received = self.client.recv(1024)
+        logging.info(f"Received: {received}")
+        assert received == b"\x00\x00\x00\x05error"
     
 
 if __name__ == "__main__":

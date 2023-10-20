@@ -11,6 +11,7 @@ from server_parser import ServerParser
 class Server:
     EXPECTED_HEADER_SIZE = 4
     DEFAULT_BUFFER_SIZE = 1024
+    ERROR_MESSAGE = b"\x00\x00\x00\x05error"
 
     def __init__(self, port:int):
         self.port = port
@@ -52,11 +53,9 @@ class Server:
                 response = Server.create_response(action, message)
                 logging.debug(f"Response packet: {response}")
                 
-                if response != None:
-                    conn.send(response)
-                    logging.debug("Sent")
-                else:
-                    logging.debug("No response, not sending")
+                conn.send(response)
+                logging.debug("Sent")
+
 
             conn.close()
 
@@ -80,7 +79,7 @@ class Server:
         message = Server.create_response_message(action, message)
         if message == None:
             logging.info("Invalid action detected")
-            return None
+            return Server.ERROR_MESSAGE
         logging.info(f"Response message: {message}")
 
         message_length = Server.create_response_message_length(message)
