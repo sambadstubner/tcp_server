@@ -73,3 +73,8 @@ class TestServer:
 if __name__ == "__main__":
     test = TestServer()
     test.test_the_lan_before_time_reverse()
+    test.test_hello_world_lowercase()
+    test.test_hello_world_random()
+    test.test_hello_world_reverse()
+    test.test_hello_world_shuffle()
+    test.test_hello_world_uppercase()

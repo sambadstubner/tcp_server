@@ -10,6 +10,7 @@ from server_parser import ServerParser
 
 class Server:
     EXPECTED_HEADER_SIZE = 4
+    DEFAULT_BUFFER_SIZE = 1024
 
     def __init__(self, port:int):
         self.port = port
@@ -33,8 +34,19 @@ class Server:
 
                 action, message_length = self.parse_header(header)
                 logging.debug(f"Action: {action:02x} Message length: {message_length:02x}")
+                
+                num_received = 0
+                message = str()
+                while(num_received < message_length):
+                    num_remaining = message_length - num_received
+                    if(num_remaining < self.DEFAULT_BUFFER_SIZE):
+                        buffer_size = num_remaining
+                    else:
+                        buffer_size = self.DEFAULT_BUFFER_SIZE
+                    received_bytes = conn.recv(buffer_size).decode()
+                    num_received += len(received_bytes)
+                    message += received_bytes
 
-                message = conn.recv(message_length).decode()
                 logging.info(f"Received: {message}")
                 
                 response = Server.create_response(action, message)
